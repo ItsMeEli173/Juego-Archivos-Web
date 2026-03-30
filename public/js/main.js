@@ -20,12 +20,184 @@ let activeNPCs = [];
 let botCounter = 1; 
 const PLAYER_COLOR = 0xcc0000;
 
+// --- VARIABLES DE RED (MULTIJUGADOR) ---
+let socket;
+let myNetworkId = null;
+const networkPlayers = {}; // NUEVO: Guarda los avatares de otros jugadores reales
+
+// --- FUNCIÓN DE CONEXIÓN Y LOBBY ---
+function connectToServer() {
+    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    socket = new WebSocket(`${protocol}//${window.location.host}`);
+
+    socket.onopen = () => console.log("🟢 Conectado al servidor multijugador");
+
+    socket.onmessage = (event) => {
+        const data = JSON.parse(event.data);
+
+        if (data.type === 'init') {
+            myNetworkId = data.id;
+            playerState.networkId = myNetworkId; 
+        }
+        // --- 1. GESTIÓN DEL MENÚ Y LOBBIES ---
+        else if (data.type === 'roomList') {
+            const listDiv = document.getElementById('room-list');
+            listDiv.innerHTML = '';
+            
+            if (Object.keys(data.rooms).length === 0) {
+                listDiv.innerHTML = '<p>No hay partidas creadas. ¡Crea una!</p>';
+            } else {
+                for (let roomId in data.rooms) {
+                    const r = data.rooms[roomId];
+                    const btn = document.createElement('button');
+                    // Reusamos el estilo de los botones del menú, adaptando el padding
+                    btn.style.width = '100%'; btn.style.margin = '10px 0'; btn.style.padding = '10px';
+                    btn.style.backgroundColor = '#444'; btn.style.color = '#fff'; btn.style.border = '1px solid #fff';
+                    btn.style.cursor = 'pointer';
+                    btn.innerText = `[${r.mode}] Sala ${roomId} - Jugadores: ${r.playerCount}`;
+                    
+                    btn.onclick = () => {
+                        socket.send(JSON.stringify({ type: 'joinRoom', roomId: roomId }));
+                    };
+                    listDiv.appendChild(btn);
+                }
+            }
+        }
+        else if (data.type === 'roomJoined') {
+            // Ocultar todo y mostrar el Lobby
+            document.querySelectorAll('.menu-box').forEach(el => el.classList.add('hidden'));
+            document.getElementById('screen-lobby').classList.remove('hidden');
+            
+            document.getElementById('lobby-mode-text').innerText = data.mode;
+            document.getElementById('lobby-count').innerText = data.playerCount;
+            
+            if (data.isHost) {
+                document.getElementById('lobby-status').innerText = "Eres el anfitrión. Inicia cuando estés listo.";
+                document.getElementById('btn-start-match').classList.remove('hidden');
+            } else {
+                document.getElementById('lobby-status').innerText = "Esperando al anfitrión...";
+                document.getElementById('btn-start-match').classList.add('hidden');
+            }
+        }
+        else if (data.type === 'lobbyUpdate') {
+            document.getElementById('lobby-count').innerText = data.playerCount;
+        }
+        else if (data.type === 'matchStarted') {
+            startGame(data.mode);
+        }
+        // --- 2. JUEGO (MOVIMIENTO) ---
+        else if (data.type === 'playerMoved') {
+            if (!networkPlayers[data.id]) networkPlayers[data.id] = createNetworkPlayer();
+            networkPlayers[data.id].mesh.position.set(data.x, data.y, data.z);
+            networkPlayers[data.id].mesh.rotation.y = data.rotation;
+            
+            // NUEVO: Sincronizar posición del escudo visualmente
+            const isBlocking = data.isBlocking;
+            networkPlayers[data.id].shield.position.z = isBlocking ? -0.8 : 0;
+            networkPlayers[data.id].shield.position.x = isBlocking ? 0 : -0.8;
+        }
+        else if (data.type === 'playerDisconnected') {
+            if (networkPlayers[data.id]) {
+                getScene().remove(networkPlayers[data.id].mesh);
+                delete networkPlayers[data.id];
+            }
+        }
+    };
+}
+
+// --- NUEVO: CREADOR DE JUGADORES DE RED ---
+function createNetworkPlayer() {
+    const scene = getScene();
+    const group = new THREE.Group();
+    
+    // COLOR GUINDO
+    const bodyMat = new THREE.MeshStandardMaterial({ color: 0x800000, flatShading: true }); 
+    const bodyGeo = new THREE.BoxGeometry(1, 2, 1);
+    const body = new THREE.Mesh(bodyGeo, bodyMat);
+    group.add(body);
+    
+    const sword = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.1, 1.5), new THREE.MeshStandardMaterial({ color: 0xcccccc }));
+    sword.position.set(0.8, 0, -0.5);
+    sword.rotation.x = Math.PI / 2;
+    group.add(sword);
+
+    // NUEVO: ESCUDO PARA EL JUGADOR DE RED
+    const shield = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.8, 0.1), new THREE.MeshStandardMaterial({ color: 0x0000ff }));
+    shield.position.set(-0.8, 0, 0);
+    group.add(shield);
+
+    scene.add(group);
+    return { mesh: group, shield: shield }; // Devolvemos la referencia del escudo
+}
+
 function init() {
     const container = document.getElementById('game-container');
     initScene(); initCamera(); initRenderer(container);
     initPlayer(); initKeyboard(); initJoystick();
-    document.getElementById('btn-ffa').onclick = () => startGame('FFA');
-    document.getElementById('btn-siege').onclick = () => startGame('SIEGE');
+    connectToServer();
+
+    // --- LÓGICA DE NAVEGACIÓN DEL MENÚ ---
+    const showScreen = (id) => {
+        document.querySelectorAll('.menu-box').forEach(el => el.classList.add('hidden'));
+        document.getElementById(id).classList.remove('hidden');
+    };
+
+    // Botones de Navegación
+    document.getElementById('btn-go-create').onclick = () => showScreen('screen-create');
+    document.getElementById('btn-go-join').onclick = () => {
+        showScreen('screen-join');
+        if (socket && socket.readyState === WebSocket.OPEN) {
+            socket.send(JSON.stringify({ type: 'getRooms' })); // Pedir lista al servidor
+        }
+    };
+    document.querySelectorAll('.btn-back').forEach(btn => {
+        btn.onclick = () => showScreen('screen-main');
+    });
+
+    // Botones de Acción de Red
+    document.getElementById('btn-refresh-rooms').onclick = () => {
+        if (socket && socket.readyState === WebSocket.OPEN) socket.send(JSON.stringify({ type: 'getRooms' }));
+    };
+    document.getElementById('btn-host-ffa').onclick = () => {
+        if (socket && socket.readyState === WebSocket.OPEN) socket.send(JSON.stringify({ type: 'createRoom', mode: 'FFA' }));
+    };
+    document.getElementById('btn-host-siege').onclick = () => {
+        if (socket && socket.readyState === WebSocket.OPEN) socket.send(JSON.stringify({ type: 'createRoom', mode: 'SIEGE' }));
+    };
+    document.getElementById('btn-start-match').onclick = () => {
+        if (socket && socket.readyState === WebSocket.OPEN) socket.send(JSON.stringify({ type: 'requestStart' }));
+    };
+    // --- LÓGICA DEL MENÚ DE PAUSA ---
+    const pauseMenu = document.getElementById('pause-menu');
+
+    // Botón en pantalla
+    document.getElementById('btn-pause').onclick = () => {
+        if (document.pointerLockElement) document.exitPointerLock();
+        pauseMenu.classList.remove('hidden');
+    };
+
+    // Botón Continuar
+    document.getElementById('btn-resume').onclick = () => {
+        pauseMenu.classList.add('hidden');
+        if (window.innerWidth > 800) document.body.requestPointerLock();
+    };
+
+    // Botón Abandonar Partida
+    document.getElementById('btn-leave-match').onclick = () => {
+        if (socket && socket.readyState === WebSocket.OPEN) {
+            socket.send(JSON.stringify({ type: 'leaveRoom' })); // Avisar al server
+        }
+        pauseMenu.classList.add('hidden');
+        isGameOver = true; // Frenar la partida actual
+        goToMenu(); // Volver al inicio limpiando la pantalla
+    };
+
+    // Truco para PC: Si presiona ESC, se quita el Pointer Lock. Lo detectamos para abrir la pausa.
+    document.addEventListener('pointerlockchange', () => {
+        if (!document.pointerLockElement && isPlaying && !isGameOver) {
+            pauseMenu.classList.remove('hidden');
+        }
+    });
     requestAnimationFrame(gameLoop);
 }
 
@@ -40,8 +212,17 @@ function startGame(mode) {
 function goToMenu() {
     isPlaying = false;
     document.getElementById('main-menu').classList.remove('hidden');
+    
+    // Borrar Bots
     activeNPCs.forEach(npc => getScene().remove(npc.mesh));
     activeNPCs = [];
+    
+    // NUEVO: Borrar clones de red de otros jugadores
+    for (let id in networkPlayers) {
+        getScene().remove(networkPlayers[id].mesh);
+        delete networkPlayers[id];
+    }
+    
     playerState.mesh.visible = false;
 }
 
@@ -166,8 +347,21 @@ function gameLoop() {
         requestAnimationFrame(gameLoop); return; 
     }
 
-    updatePlayer(deltaTime, input);
+   updatePlayer(deltaTime, input);
     updateCamera(playerState.mesh);
+
+    // --- NUEVO: ENVIAR POSICIÓN AL SERVIDOR ---
+    // Solo enviamos datos si estamos conectados y jugando activamente
+    if (socket && socket.readyState === WebSocket.OPEN && isPlaying && !playerState.isDead) {
+        socket.send(JSON.stringify({
+            type: 'move',
+            x: playerState.mesh.position.x,
+            y: playerState.mesh.position.y,
+            z: playerState.mesh.position.z,
+            rotation: playerState.mesh.rotation.y,
+            isBlocking: playerState.isBlocking // <-- NUEVO: Enviamos el escudo
+        }));
+    }
 
     if (playerState.isAttacking && playerState.attackCooldown === 0.5 && !playerState.isDead) { 
         activeNPCs.forEach(npc => {
@@ -210,7 +404,8 @@ function gameLoop() {
     const timeDisplay = gameMode === 'FFA' ? formatTime(120 - gameTimeElapsed) : formatTime(gameTimeElapsed);
     updateHUD(playerState.health, playerState.kills, timeDisplay);
 
-    updateMinimap(playerState, activeNPCs, gameMode);
+    // Añade la variable "networkPlayers" al final
+    updateMinimap(playerState, activeNPCs, gameMode, networkPlayers);
 
     render();
     requestAnimationFrame(gameLoop);

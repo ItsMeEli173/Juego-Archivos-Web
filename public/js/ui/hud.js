@@ -50,53 +50,63 @@ export function showGameOverScreen(allPlayers, titleText, onRestartCallback, onM
 }
 
 // --- NUEVO: FUNCIÓN DEL MINIMAPA ---
-export function updateMinimap(player, npcs, gameMode) {
+// Añadimos "networkPlayers" como cuarto parámetro
+export function updateMinimap(player, npcs, gameMode, networkPlayers) {
     const canvas = document.getElementById('minimap');
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
     
-    // Limpiar frame anterior
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
     const cx = canvas.width / 2;
     const cy = canvas.height / 2;
-    const scale = canvas.width / 300; // El mundo mide 300 (-150 a 150)
+    const scale = canvas.width / 300; 
 
-    // 1. Dibujar el Castillo (X=0, Z=-100)
-    ctx.fillStyle = 'rgba(119, 119, 119, 0.8)'; // Gris castillo
-    const castleW = 50 * scale;
-    const castleH = 50 * scale;
+    // 1. Castillo
+    ctx.fillStyle = 'rgba(119, 119, 119, 0.8)'; 
+    const castleW = 50 * scale; const castleH = 50 * scale;
     const castleX = cx + (0 * scale) - (castleW / 2);
     const castleZ = cy + (-100 * scale) - (castleH / 2);
     ctx.fillRect(castleX, castleZ, castleW, castleH);
 
-    // 2. Dibujar Bots
+    // 2. Bots (NPCs)
     npcs.forEach(npc => {
         if (npc.isDead || !npc.mesh) return;
         ctx.beginPath();
         const nx = cx + (npc.mesh.position.x * scale);
         const nz = cy + (npc.mesh.position.z * scale);
         ctx.arc(nx, nz, 3, 0, Math.PI * 2);
-        
-        // Color según equipo
-        if (gameMode === 'FFA') {
-            ctx.fillStyle = '#' + npc.baseColor.toString(16).padStart(6, '0');
-        } else {
-            ctx.fillStyle = npc.team === 'defender' ? '#0088ff' : '#ff8800';
-        }
+        if (gameMode === 'FFA') ctx.fillStyle = '#' + npc.baseColor.toString(16).padStart(6, '0');
+        else ctx.fillStyle = npc.team === 'defender' ? '#0088ff' : '#ff8800';
         ctx.fill();
     });
 
-    // 3. Dibujar Jugador Principal (Tú)
+    // 3. Jugadores de Red (Online)
+    if (networkPlayers) {
+        for (let id in networkPlayers) {
+            const np = networkPlayers[id];
+            ctx.beginPath();
+            const nx = cx + (np.mesh.position.x * scale);
+            const nz = cy + (np.mesh.position.z * scale);
+            ctx.arc(nx, nz, 4, 0, Math.PI * 2);
+            ctx.fillStyle = '#800000'; // Color Guindo
+            ctx.fill();
+            ctx.strokeStyle = '#ffffff';
+            ctx.lineWidth = 1;
+            ctx.stroke();
+        }
+    }
+
+    // 4. Jugador Principal (Tú)
     if (!player.isDead && player.mesh) {
         ctx.beginPath();
         const px = cx + (player.mesh.position.x * scale);
         const pz = cy + (player.mesh.position.z * scale);
         ctx.arc(px, pz, 4, 0, Math.PI * 2);
-        ctx.fillStyle = '#00ff00'; // Tú siempre eres el punto verde
+        ctx.fillStyle = '#00ff00'; // Verde
         ctx.fill();
         ctx.strokeStyle = '#ffffff';
         ctx.lineWidth = 1;
-        ctx.stroke(); // Borde blanco para resaltar
+        ctx.stroke(); 
     }
 }

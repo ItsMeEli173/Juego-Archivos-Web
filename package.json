@@ -1,0 +1,16 @@
+{
+  "name": "juego-archivos-web",
+  "version": "1.0.0",
+  "description": "Un trepidante juego de combate cuerpo a cuerpo en 3D ejecutable directamente en el navegador. Construido desde cero utilizando **Vanilla JavaScript** y **Three.js** para el renderizado, sin depender de motores de videojuegos pesados como Unity o Unreal.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^5.2.1",
+    "ws": "^8.20.0"
+  }
+}
