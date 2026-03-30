@@ -1,0 +1,214 @@
+body, html {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background-color: #000;
+}
+
+#game-container {
+    width: 100%;
+    height: 100%;
+    display: block;
+}
+
+/* Capa superpuesta para los controles táctiles */
+#ui-layer {
+    position: absolute;
+    bottom: 0; left: 0; width: 100%; height: 100%;
+    pointer-events: none; 
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    padding: 30px;
+    box-sizing: border-box;
+    z-index: 50; /* Asegurar que los controles estén accesibles */
+}
+
+/* Joystick Virtual */
+#joystick-zone {
+    width: 120px; height: 120px;
+    background: rgba(255, 255, 255, 0.1);
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
+    pointer-events: auto; 
+    position: relative;
+    touch-action: none; 
+}
+
+#joystick-knob {
+    width: 50px; height: 50px;
+    background: rgba(255, 255, 255, 0.6);
+    border-radius: 50%;
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+/* Botones de acción */
+#action-buttons button {
+    pointer-events: auto;
+    width: 70px; height: 70px;
+    border-radius: 50%;
+    border: none;
+    color: white;
+    font-weight: bold;
+    margin-left: 15px;
+    touch-action: none;
+    user-select: none;
+}
+#btn-jump { background: rgba(50, 200, 50, 0.6); } 
+#btn-block { background: rgba(50, 100, 255, 0.6); }
+#btn-attack { background: rgba(255, 50, 50, 0.6); }
+
+/* Ocultar en pantallas grandes (PC) */
+@media (min-width: 800px) {
+    #ui-layer { display: none; }
+}
+
+/* --- HUD (Interfaz del Jugador) --- */
+#hud-layer {
+    position: absolute;
+    top: 0; left: 0; 
+    width: 100%; height: 100%; /* Necesita abarcar toda la pantalla para posicionar elementos abajo */
+    pointer-events: none; 
+    font-family: 'Arial', sans-serif;
+    color: white;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+    z-index: 40;
+}
+
+/* 1. Contadores (Arriba a la Izquierda) */
+#stats-container {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    display: flex;
+    gap: 20px;
+    font-size: 24px;
+    font-weight: bold;
+}
+
+/* 2. Minimapa (Arriba a la Derecha) */
+#minimap {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    background: rgba(0, 0, 0, 0.6);
+    border: 2px solid #555;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.8);
+    pointer-events: none; 
+}
+
+/* 3. Barra de Vida (Abajo en el Centro) */
+#health-container {
+    position: absolute;
+    bottom: 30px; /* Pegado abajo */
+    left: 50%;
+    transform: translateX(-50%); /* Centrado perfectamente */
+    width: 300px; /* Un poco más larga para que se vea épica */
+    height: 25px;
+    background-color: rgba(0, 0, 0, 0.5);
+    border: 2px solid #fff;
+    border-radius: 5px;
+    overflow: hidden;
+}
+
+#health-bar {
+    width: 100%;
+    height: 100%;
+    background-color: #ff3333;
+    transition: width 0.2s ease-out; 
+}
+
+
+/* --- FASE 6: Pantalla Final --- */
+#game-over-screen {
+    position: absolute;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0, 0, 0, 0.85);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    color: white;
+    font-family: 'Arial', sans-serif;
+    z-index: 100; 
+}
+
+#game-over-screen.hidden {
+    display: none;
+}
+
+#game-over-screen h1 { color: #ffcc00; font-size: 3rem; margin-bottom: 10px; text-align: center;}
+.stats-box, .leaderboard-box {
+    background: rgba(255, 255, 255, 0.1);
+    padding: 20px;
+    border-radius: 10px;
+    margin: 10px;
+    width: 300px;
+    text-align: center;
+}
+
+#leaderboard-list {
+    text-align: left;
+    font-size: 1.2rem;
+    padding-left: 20px;
+}
+
+#btn-restart {
+    padding: 15px 40px;
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: white;
+    background-color: #ff3333;
+    border: 2px solid #fff;
+    border-radius: 8px;
+    cursor: pointer;
+    pointer-events: auto;
+    transition: transform 0.1s;
+}
+
+#btn-restart:hover { background-color: #ff6666; transform: scale(1.05); }
+
+/* --- ESTILOS DE LA TABLA CS 1.6 --- */
+.score-table { width: 100%; border-collapse: collapse; margin-bottom: 15px; text-shadow: none; color: white;}
+.score-table th, .score-table td { padding: 8px; border-bottom: 1px solid #555; text-align: left; }
+.score-table th { background: rgba(0,0,0,0.8); }
+.team-attacker th { color: #ffcc00; border-bottom: 2px solid #ffcc00; }
+.team-defender th { color: #0088ff; border-bottom: 2px solid #0088ff; }
+.player-row { font-weight: bold; background: rgba(255, 255, 255, 0.2); }
+
+/* --- MENÚ PRINCIPAL --- */
+#main-menu {
+    position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0, 0, 0, 0.9);
+    display: flex; flex-direction: column; justify-content: center; align-items: center;
+    color: white; font-family: 'Arial', sans-serif;
+    z-index: 200; 
+}
+#main-menu.hidden { display: none; }
+#main-menu h1 { font-size: 4rem; color: #ffcc00; margin-bottom: 40px; text-shadow: 2px 2px 5px #000;}
+
+.menu-box button {
+    display: block; width: 350px; margin: 20px auto; padding: 20px;
+    font-size: 1.2rem; font-weight: bold; color: white;
+    background-color: #333; border: 2px solid #fff; border-radius: 8px;
+    cursor: pointer; transition: 0.2s; pointer-events: auto;
+}
+.menu-box button:hover { background-color: #555; transform: scale(1.05); }
+#btn-ffa { border-color: #ffcc00; color: #ffcc00; }
+#btn-siege { border-color: #0088ff; color: #0088ff; }
+
+/* Botón Volver al menú en pantalla final */
+#btn-menu {
+    padding: 15px 40px; font-size: 1.5rem; font-weight: bold; color: white;
+    background-color: #555; border: 2px solid #fff; border-radius: 8px;
+    cursor: pointer; pointer-events: auto; transition: transform 0.1s;
+}
+#btn-menu:hover { background-color: #777; transform: scale(1.05); }
+
+/* Ocultador Genérico */
+.hidden { display: none !important; }
