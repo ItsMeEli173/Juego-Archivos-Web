@@ -27,10 +27,15 @@ export function generateForest(scene, count = 400) {
         
         // Zona segura inicio (radio de 20)
         if (Math.abs(x) < 20 && Math.abs(z) < 20) continue;
-        
         // Zona segura del castillo (no plantar árboles dentro o en los muros)
         if (x > -40 && x < 40 && z < -70 && z > -130) continue; 
-
+        
+        const distCastle = Math.sqrt(x*x + (z + 100)*(z + 100)); // Centro del castillo
+        const distSpawn = Math.sqrt(x*x + (z - 80)*(z - 80));
+        if (distCastle < 45 || distSpawn < 35) {
+        i--; // Restamos 1 al contador para intentar plantar este árbol en otro lado
+        continue; // Saltamos a la siguiente iteración
+    }
         const tree = createTree();
         const y = getTerrainHeight(x, z);
         tree.position.set(x, y, z);

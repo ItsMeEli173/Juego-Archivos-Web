@@ -13,6 +13,7 @@
         <h1>JUEGO DE ESPADAS</h1>
         
         <div id="screen-main" class="menu-box">
+            <input type="text" id="player-name-input" placeholder="Tu Nombre..." maxlength="12" style="width: 80%; padding: 10px; margin-bottom: 20px; border-radius: 5px; border: none;">
             <button id="btn-go-create">Crear Partida</button>
             <button id="btn-go-join">Unirse a Partida</button>
         </div>
@@ -35,9 +36,24 @@
         <div id="screen-lobby" class="menu-box hidden">
             <h2>Lobby de Espera</h2>
             <p style="font-size: 1.2rem; margin-bottom: 5px;">Modo: <span id="lobby-mode-text" style="color: #ffcc00;">---</span></p>
-            <p style="font-size: 1.2rem; margin-bottom: 20px;">Jugadores en sala: <span id="lobby-count" style="color: #0088ff; font-weight: bold;">1</span></p>
-            <p id="lobby-status">Esperando al anfitrión...</p>
-            <button id="btn-start-match" class="hidden">INICIAR PARTIDA</button>
+            <p style="font-size: 1.2rem; margin-bottom: 15px;">Jugadores en sala: <span id="lobby-count" style="color: #0088ff; font-weight: bold;">1</span></p>
+
+            <div id="team-selector" style="margin-bottom: 20px; background: rgba(255,255,255,0.1); padding: 15px; border-radius: 8px;">
+                <h3 style="margin-top: 0; font-size: 1.1rem;">Elige tu Bando:</h3>
+                <label style="display: block; margin: 8px 0; cursor: pointer; color: #ff8800; font-weight: bold;">
+                    <input type="radio" name="team-choice" value="attacker" checked> ⚔️ Atacantes
+                </label>
+                <label style="display: block; margin: 8px 0; cursor: pointer; color: #0088ff; font-weight: bold;">
+                    <input type="radio" name="team-choice" value="defender"> 🛡️ Defensores
+                </label>
+            </div>
+
+            <p id="lobby-status" style="margin-bottom: 20px;">Esperando al anfitrión...</p>
+            
+            <div style="display: flex; gap: 10px; justify-content: center;">
+                <button id="btn-start-match" class="hidden" style="width: auto; margin: 0;">INICIAR</button>
+                <button id="btn-leave-lobby" class="btn-back" style="width: auto; margin: 0; background-color: #cc0000; border-color: #cc0000;">Salir de la Sala</button>
+            </div>
         </div>
     </div>
 
@@ -87,7 +103,13 @@
             <button id="btn-leave-match" class="menu-btn leave-btn">Abandonar Partida</button>
         </div>
     </div>
-    
+    <div id="modal-msg" class="hidden">
+        <div class="modal-content">
+            <h2 id="modal-title">AVISO</h2>
+            <p id="modal-body">El anfitrión ha cerrado la sala.</p>
+            <button id="btn-modal-ok">Aceptar</button>
+        </div>
+    </div>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script type="module" src="js/main.js"></script>
 </body>
