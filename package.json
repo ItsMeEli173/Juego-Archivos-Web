@@ -4,7 +4,8 @@
   "description": "Un trepidante juego de combate cuerpo a cuerpo en 3D ejecutable directamente en el navegador. Construido desde cero utilizando **Vanilla JavaScript** y **Three.js** para el renderizado, sin depender de motores de videojuegos pesados como Unity o Unreal.",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
   },
   "keywords": [],
   "author": "",

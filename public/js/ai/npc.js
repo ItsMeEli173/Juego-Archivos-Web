@@ -37,7 +37,7 @@ export function createNPC(x, z, color = 0xff8800, team = 'defender', name = 'Bot
     return npc;
 }
 
-export function updateNPCs(deltaTime, npcs, playerState, gameMode) {
+export function updateNPCs(deltaTime, npcs, playerState, gameMode, networkPlayers = {}) {
     for (let i = npcs.length - 1; i >= 0; i--) {
         let npc = npcs[i];
         if (npc.isDead) continue; 
@@ -66,12 +66,21 @@ export function updateNPCs(deltaTime, npcs, playerState, gameMode) {
                 }
             });
 
+            // Target network players
+            for (let id in networkPlayers) {
+                let np = networkPlayers[id];
+                if (!np.isDead && np.health > 0 && np.mesh) {
+                    if (gameMode === 'FFA' || np.team !== npc.team) potentialTargets.push(np);
+                }
+            }
+
             let closestDist = Infinity;
             npc.target = null;
             potentialTargets.forEach(potTarget => {
                 const dx = potTarget.mesh.position.x - npc.mesh.position.x;
+                const dy = potTarget.mesh.position.y - npc.mesh.position.y;
                 const dz = potTarget.mesh.position.z - npc.mesh.position.z;
-                const dist = Math.sqrt(dx*dx + dz*dz);
+                const dist = Math.sqrt(dx*dx + dy*dy + dz*dz);
                 if (dist < closestDist) { closestDist = dist; npc.target = potTarget; }
             });
 
@@ -114,13 +123,14 @@ export function updateNPCs(deltaTime, npcs, playerState, gameMode) {
 
         } else if (npc.state === 'CHASING' && npc.target) {
             const dx = npc.target.mesh.position.x - npc.mesh.position.x;
+            const dy = npc.target.mesh.position.y - npc.mesh.position.y;
             const dz = npc.target.mesh.position.z - npc.mesh.position.z;
-            const dist = Math.sqrt(dx*dx + dz*dz);
+            const distPlana = Math.sqrt(dx*dx + dz*dz);
             npc.mesh.rotation.y = Math.atan2(-dx, -dz);
 
-            if (dist > 0) {
-                const dirX = (dx / dist) * npc.speed * deltaTime;
-                const dirZ = (dz / dist) * npc.speed * deltaTime;
+            if (distPlana > 0) {
+                const dirX = (dx / distPlana) * npc.speed * deltaTime;
+                const dirZ = (dz / distPlana) * npc.speed * deltaTime;
 
                 let hitX = checkWallCollision(npc.mesh.position.x + dirX, npc.mesh.position.z, npc.mesh.position.y);
                 let hitZ = checkWallCollision(npc.mesh.position.x, npc.mesh.position.z + dirZ, npc.mesh.position.y);
