@@ -27,5 +27,14 @@ export function createTerrain(scene) {
     terrain.rotation.x = -Math.PI / 2;
     
     scene.add(terrain);
+    
+    // Suelo infinito para el horizonte
+    const bgGeo = new THREE.PlaneGeometry(3000, 3000);
+    const bgMat = new THREE.MeshStandardMaterial({ color: 0x2d5a27, flatShading: true });
+    const bg = new THREE.Mesh(bgGeo, bgMat);
+    bg.rotation.x = -Math.PI / 2;
+    bg.position.y = -3.5; 
+    scene.add(bg);
+
     return terrain;
 }

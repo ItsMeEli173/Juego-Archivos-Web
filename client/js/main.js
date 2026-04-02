@@ -275,10 +275,26 @@ function createNetworkPlayer(teamColor, team = 'attacker') {
     const scene = getScene();
     const group = new THREE.Group();
     
+    // Tronco
     const bodyMat = new THREE.MeshStandardMaterial({ color: teamColor, flatShading: true }); 
-    const bodyGeo = new THREE.BoxGeometry(1, 2, 1);
+    const bodyGeo = new THREE.BoxGeometry(1, 1.2, 0.8);
     const body = new THREE.Mesh(bodyGeo, bodyMat);
+    body.position.y = -0.4;
     group.add(body);
+    
+    // Cabeza
+    const headGeo = new THREE.BoxGeometry(0.6, 0.6, 0.6);
+    const headMat = new THREE.MeshStandardMaterial({ color: 0xffccaa, flatShading: true });
+    const head = new THREE.Mesh(headGeo, headMat);
+    head.position.y = 0.5;
+    group.add(head);
+
+    // Casco
+    const helmetGeo = new THREE.BoxGeometry(0.7, 0.4, 0.7);
+    const helmetMat = new THREE.MeshStandardMaterial({ color: 0x888888, flatShading: true });
+    const helmet = new THREE.Mesh(helmetGeo, helmetMat);
+    helmet.position.y = 0.7;
+    group.add(helmet);
     
     const sword = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.1, 1.5), new THREE.MeshStandardMaterial({ color: 0xcccccc }));
     sword.position.set(0.8, 0, -0.5);
@@ -322,9 +338,25 @@ function createGhostBot(botData) {
     const scene = getScene();
     const group = new THREE.Group();
     
+    // Tronco
     const bodyMat = new THREE.MeshStandardMaterial({ color: botData.col, flatShading: true });
-    const body = new THREE.Mesh(new THREE.BoxGeometry(1, 2, 1), bodyMat);
+    const body = new THREE.Mesh(new THREE.BoxGeometry(1, 1.2, 0.8), bodyMat);
+    body.position.y = -0.4;
     group.add(body);
+    
+    // Cabeza
+    const headGeo = new THREE.BoxGeometry(0.6, 0.6, 0.6);
+    const headMat = new THREE.MeshStandardMaterial({ color: 0xffccaa, flatShading: true });
+    const head = new THREE.Mesh(headGeo, headMat);
+    head.position.y = 0.5;
+    group.add(head);
+
+    // Casco
+    const helmetGeo = new THREE.BoxGeometry(0.7, 0.4, 0.7);
+    const helmetMat = new THREE.MeshStandardMaterial({ color: 0x888888, flatShading: true });
+    const helmet = new THREE.Mesh(helmetGeo, helmetMat);
+    helmet.position.y = 0.7;
+    group.add(helmet);
     
     const sword = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.1, 1.5), new THREE.MeshStandardMaterial({ color: 0xcccccc }));
     sword.position.set(0.8, 0, -0.5);
