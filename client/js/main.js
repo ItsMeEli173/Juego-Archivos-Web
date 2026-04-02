@@ -55,7 +55,6 @@ function handleNetworkMessage(data) {
         playerState.networkId = data.id;
     }
 
-    // --- ROOM LIST ---
     else if (data.type === 'roomList') {
         const listDiv = document.getElementById('room-list');
         listDiv.innerHTML = '';
@@ -70,7 +69,7 @@ function handleNetworkMessage(data) {
                 btn.style.width = '100%'; btn.style.margin = '10px 0'; btn.style.padding = '10px';
                 btn.style.backgroundColor = '#444'; btn.style.color = '#fff'; btn.style.border = '1px solid #fff';
                 btn.style.cursor = 'pointer';
-                btn.innerText = `[${r.mode}] Sala ${roomId} - Jugadores: ${r.playerCount}`;
+                btn.innerText = `[${r.mode}] Sala de ${r.hostName || "Jugador"} - Jugadores: ${r.playerCount}`;
                 
                 btn.onclick = () => sendJoinRoom(roomId);
                 listDiv.appendChild(btn);
@@ -138,6 +137,7 @@ function handleNetworkMessage(data) {
         np.isAttacking = data.isAttacking || false;
         np.attackFrame = data.attackFrame || false;
         np.name = data.name || "Enemigo";
+        np.team = data.team || "attacker";
         
         // Visual del escudo
         np.shield.position.z = data.isBlocking ? -0.8 : 0;
@@ -271,7 +271,7 @@ function handleNetworkMessage(data) {
 // =====================================================
 // Crear jugador de red visual (mesh)
 // =====================================================
-function createNetworkPlayer(teamColor) {
+function createNetworkPlayer(teamColor, team = 'attacker') {
     const scene = getScene();
     const group = new THREE.Group();
     
@@ -290,7 +290,7 @@ function createNetworkPlayer(teamColor) {
     group.add(shield);
 
     scene.add(group);
-    return { mesh: group, sword: sword, shield: shield, color: teamColor, health: 100, isDead: false, isAttacking: false, name: '', team: 'attacker' };
+    return { mesh: group, sword: sword, shield: shield, color: teamColor, health: 100, isDead: false, isAttacking: false, name: '', team: team };
 }
 
 // =====================================================
@@ -472,11 +472,30 @@ function init() {
         if (isConnected()) sendGetRooms();
     };
     document.getElementById('btn-host-ffa').onclick = () => {
-        if (isConnected()) sendCreateRoom('FFA');
+        if (isConnected()) {
+            const hostName = document.getElementById('player-name-input').value || "Jugador";
+            sendCreateRoom('FFA', hostName);
+        }
     };
     document.getElementById('btn-host-siege').onclick = () => {
-        if (isConnected()) sendCreateRoom('SIEGE');
+        if (isConnected()) {
+            const hostName = document.getElementById('player-name-input').value || "Jugador";
+            sendCreateRoom('SIEGE', hostName);
+        }
     };
+    
+    document.getElementById('input-max-entities').addEventListener('input', (e) => {
+        let val = parseInt(e.target.value);
+        if (val > 100) e.target.value = 100;
+    });
+    
+    document.getElementById('input-max-entities').addEventListener('change', (e) => {
+        let val = parseInt(e.target.value);
+        if (isNaN(val)) val = 2;
+        if (val < 2) val = 2;
+        if (val > 100) val = 100;
+        e.target.value = val;
+    });
     document.getElementById('btn-start-match').onclick = () => {
         if (isConnected()) sendRequestStart();
     };
@@ -704,6 +723,8 @@ function restartGame() {
 function calculateBotCount() {
     let maxTotal = parseInt(document.getElementById('input-max-entities').value);
     if (isNaN(maxTotal)) maxTotal = 20;
+    if (maxTotal > 100) maxTotal = 100;
+    if (maxTotal < 2) maxTotal = 2;
 
     if (gameMode === 'FFA') {
         return Math.max(0, maxTotal - humanPlayerCount);

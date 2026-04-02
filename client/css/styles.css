@@ -143,13 +143,33 @@ body, html {
 }
 
 #game-over-screen h1 { color: #ffcc00; font-size: 3rem; margin-bottom: 10px; text-align: center;}
-.stats-box, .leaderboard-box {
+.stats-box {
     background: rgba(255, 255, 255, 0.1);
     padding: 20px;
     border-radius: 10px;
     margin: 10px;
     width: 300px;
     text-align: center;
+}
+
+.leaderboard-box {
+    background: rgba(255, 255, 255, 0.1);
+    padding: 20px;
+    border-radius: 10px;
+    margin: 10px;
+    width: 400px;
+    max-height: 60vh;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.table-half {
+    flex: 1;
+    overflow-y: auto;
+    border-radius: 5px;
+    background: rgba(0, 0, 0, 0.3);
 }
 
 #leaderboard-list {
@@ -176,7 +196,7 @@ body, html {
 /* --- ESTILOS DE LA TABLA CS 1.6 --- */
 .score-table { width: 100%; border-collapse: collapse; margin-bottom: 15px; text-shadow: none; color: white;}
 .score-table th, .score-table td { padding: 8px; border-bottom: 1px solid #555; text-align: left; }
-.score-table th { background: rgba(0,0,0,0.8); }
+.score-table th { background: rgba(0,0,0,1); position: sticky; top: 0; z-index: 2; }
 .team-attacker th { color: #ffcc00; border-bottom: 2px solid #ffcc00; }
 .team-defender th { color: #0088ff; border-bottom: 2px solid #0088ff; }
 .player-row { font-weight: bold; background: rgba(255, 255, 255, 0.2); }

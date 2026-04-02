@@ -32,9 +32,12 @@ export function showGameOverScreen(allPlayers, titleText, onRestartCallback, onM
         };
 
         if (defenders.length === 0) {
-            listContainer.innerHTML = buildTable('JUGADORES (Todos contra Todos)', attackers, 'team-attacker');
+            listContainer.innerHTML = `<div class="table-half" style="flex: 1 1 100%">` + buildTable('JUGADORES (Todos contra Todos)', attackers, 'team-attacker') + `</div>`;
         } else {
-            listContainer.innerHTML = buildTable('ATACANTES', attackers, 'team-attacker') + buildTable('DEFENSORES', defenders, 'team-defender');
+            listContainer.innerHTML = `
+                <div class="table-half attackers-half">${buildTable('ATACANTES', attackers, 'team-attacker')}</div>
+                <div class="table-half defenders-half">${buildTable('DEFENSORES', defenders, 'team-defender')}</div>
+            `;
         }
     }
 

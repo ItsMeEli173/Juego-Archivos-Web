@@ -47,7 +47,7 @@ export function isConnected() { return socket && socket.readyState === WebSocket
 export function getSocket() { return socket; }
 
 // --- Lobby ---
-export function sendCreateRoom(mode) { send({ type: 'createRoom', mode }); }
+export function sendCreateRoom(mode, hostName) { send({ type: 'createRoom', mode, hostName }); }
 export function sendJoinRoom(roomId) { send({ type: 'joinRoom', roomId }); }
 export function sendGetRooms() { send({ type: 'getRooms' }); }
 export function sendRequestStart() { send({ type: 'requestStart' }); }
@@ -66,6 +66,7 @@ export function sendMove(playerState) {
         attackFrame: playerState.attackCooldown > 0.45, // true solo en el frame exacto del golpe
         color: playerState.baseColor,
         name: playerState.name,
+        team: playerState.team,
         health: playerState.health,
         isDead: playerState.isDead
     });
