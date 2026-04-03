@@ -19,11 +19,22 @@ function createTree() {
     return tree;
 }
 
+// PRNG Mulberry32 con semilla universal para generar siempre el mismo bosque
+function mulberry32(a) {
+    return function() {
+        var t = a += 0x6D2B79F5;
+        t = Math.imul(t ^ (t >>> 15), t | 1);
+        t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+        return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    }
+}
+
 // Subimos la cantidad a 400 árboles
 export function generateForest(scene, count = 400) {
+    const seededRandom = mulberry32(1337); // Semilla fija "1337" para todos los jugadores
     for (let i = 0; i < count; i++) {
-        const x = (Math.random() - 0.5) * 280;
-        const z = (Math.random() - 0.5) * 280;
+        const x = (seededRandom() - 0.5) * 280;
+        const z = (seededRandom() - 0.5) * 280;
         
         // Zona segura inicio (radio de 20)
         if (Math.abs(x) < 20 && Math.abs(z) < 20) continue;
@@ -40,8 +51,8 @@ export function generateForest(scene, count = 400) {
         const y = getTerrainHeight(x, z);
         tree.position.set(x, y, z);
         
-        tree.rotation.y = Math.random() * Math.PI;
-        const scale = 0.7 + Math.random() * 0.8; // Más variabilidad de tamaño
+        tree.rotation.y = seededRandom() * Math.PI;
+        const scale = 0.7 + seededRandom() * 0.8; // Más variabilidad de tamaño
         tree.scale.set(scale, scale, scale);
         
         scene.add(tree);

@@ -10,8 +10,10 @@ let messageCallback = null;
 // --- Throttle state ---
 let lastBotSyncTime = 0;
 let lastTimerSyncTime = 0;
+let lastMoveSyncTime = 0;
 const BOT_SYNC_INTERVAL = 30;   // ms — baja latencia, sin lerp
 const TIMER_SYNC_INTERVAL = 1000; // ms
+const MOVE_SYNC_INTERVAL = 50; // ms
 
 export function connectToServer(onMessageCb) {
     messageCallback = onMessageCb;
@@ -55,6 +57,11 @@ export function sendLeaveRoom() { send({ type: 'leaveRoom' }); }
 
 // --- Movimiento (cada frame) ---
 export function sendMove(playerState) {
+    const now = performance.now();
+    // Siempre enviar de inmediato si lanza ataque, de lo contrario restringimos a 50ms
+    if (now - lastMoveSyncTime < MOVE_SYNC_INTERVAL && !playerState.attackFrame && !playerState.isDead) return;
+    lastMoveSyncTime = now;
+
     send({
         type: 'move',
         x: playerState.mesh.position.x,
